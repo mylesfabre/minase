@@ -1,0 +1,108 @@
+{
+  "nodes": [
+    {
+      "id": "SRC",
+      "type": "node",
+      "attrs": {
+        "role": "source"
+      }
+    },
+    {
+      "id": "S1",
+      "type": "tank",
+      "attrs": {}
+    },
+    {
+      "id": "P1",
+      "type": "pump",
+      "attrs": {
+        "rated_head": 25
+      }
+    },
+    {
+      "id": "V1",
+      "type": "valve",
+      "attrs": {
+        "Cv": 30,
+        "openness": 0.8
+      }
+    },
+    {
+      "id": "PIPE_X",
+      "type": "node",
+      "attrs": {}
+    },
+    {
+      "id": "T2",
+      "type": "tank",
+      "attrs": {}
+    },
+    {
+      "id": "SNK",
+      "type": "node",
+      "attrs": {
+        "role": "sink"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "l0",
+      "type": "line",
+      "src": "SRC",
+      "dst": "S1",
+      "attrs": {
+        "capacity": 100
+      }
+    },
+    {
+      "id": "e1",
+      "type": "pipe",
+      "src": "S1",
+      "dst": "P1",
+      "attrs": {
+        "D": 0.12,
+        "L": 15
+      }
+    },
+    {
+      "id": "e2",
+      "type": "pipe",
+      "src": "P1",
+      "dst": "V1",
+      "attrs": {
+        "D": 0.1,
+        "L": 10
+      }
+    },
+    {
+      "id": "e3",
+      "type": "pipe",
+      "src": "V1",
+      "dst": "PIPE_X",
+      "attrs": {
+        "D": 0.1,
+        "L": 20
+      }
+    },
+    {
+      "id": "e4",
+      "type": "pipe",
+      "src": "PIPE_X",
+      "dst": "T2",
+      "attrs": {
+        "D": 0.1,
+        "L": 10
+      }
+    },
+    {
+      "id": "l1",
+      "type": "line",
+      "src": "T2",
+      "dst": "SNK",
+      "attrs": {
+        "capacity": 100
+      }
+    }
+  ]
+}
