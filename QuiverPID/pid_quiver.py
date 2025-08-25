@@ -1,4 +1,5 @@
 import json
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Any, Optional, Set
 import math
@@ -175,7 +176,6 @@ def gnn_tensors(quiv: QuiverRep) -> Dict[str, Any]:
     }
 
 # Compute SCF via maxflow/reachability
-
 def build_capacity_graph(g: PidGraph, capacity_field: str = "capacity") -> Dict[str, Dict[str, float]]:
     cap_graph = {}
     functor = PidToQuiver(linearize=True)
@@ -196,37 +196,123 @@ def build_capacity_graph(g: PidGraph, capacity_field: str = "capacity") -> Dict[
             cap_graph.setdefault(e.src, {})[e.dst] = cap
     return cap_graph
 
-# Possibly change to use Dinic's Algo for MaxFlow algorithm
-def edmonds_karp(cap_graph: Dict[str, Dict[str, float]], s: str, t: str) -> float:
-    flow = 0.0
+def dinic_maxflow(cap_graph: Dict[str, Dict[str, float]], s: str, t: str) -> float:
+    """
+    Compute maximum flow from s to t in a directed graph with capacities
+    using Dinic's algorithm.
+
+    cap_graph: adjacency dict {u: {v: capacity}}
+    s, t: source and sink node IDs
+    """
+    # Build residual capacity graph
     res = {u: dict(v) for u, v in cap_graph.items()}
     for u in list(cap_graph.keys()):
         for v in cap_graph[u].keys():
             res.setdefault(v, {})
             res[v].setdefault(u, 0.0)
-    while True:
-        parent = {s: None}
-        q = [s]
-        while q and t not in parent:
-            u = q.pop(0)
-            for v, cap in res.get(u, {}).items():
-                if v not in parent and cap > 1e-12:
-                    parent[v] = u
+
+    def bfs_level() -> Dict[str, int]:
+        """Build level graph (distance from source)."""
+        level = {s: 0}
+        q = deque([s])
+        while q:
+            u = q.popleft()
+            for v, cap in res[u].items():
+                if cap > 1e-12 and v not in level:
+                    level[v] = level[u] + 1
                     q.append(v)
-        if t not in parent:
+        return level
+
+    def dfs_flow(u: str, pushed: float, level: Dict[str, int], next_iter: Dict[str, int]) -> float:
+        """DFS blocking flow with edge iterator."""
+        if u == t or pushed == 0:
+            return pushed
+        neighbors = list(res[u].items())
+        while next_iter[u] < len(neighbors):
+            v, cap = neighbors[next_iter[u]]
+            next_iter[u] += 1
+            if cap > 1e-12 and level.get(v, -1) == level[u] + 1:
+                tr = dfs_flow(v, min(pushed, cap), level, next_iter)
+                if tr > 0:
+                    res[u][v] -= tr
+                    res[v][u] = res.get(v, {}).get(u, 0.0) + tr
+                    return tr
+        return 0.0
+
+    flow = 0.0
+    while True:
+        level = bfs_level()
+        if t not in level:  # no augmenting path
             break
-        v = t
-        bottleneck = float("inf")
-        path = []
-        while parent[v] is not None:
-            u = parent[v]
-            path.append((u, v))
-            bottleneck = min(bottleneck, res[u][v])
-            v = u
-        for u, v in path:
-            res[u][v] -= bottleneck
-            res[v][u] = res.get(v, {}).get(u, 0.0) + bottleneck
-        flow += bottleneck
+        next_iter = {u: 0 for u in res}
+        while True:
+            pushed = dfs_flow(s, float("inf"), level, next_iter)
+            if pushed == 0:
+                break
+            flow += pushed
+
+    return flow
+
+from collections import deque
+from typing import Dict
+from pid_quiver import PidGraph  # assuming your class is in pid_quiver.py
+
+# Use PID Objects Directly
+# Don't be mad about code duplication... let it slide..
+def dinic_maxflow_pid(g: PidGraph, s: str, t: str) -> float:
+    """
+    Run Dinic's MaxFlow algorithm on a PidGraph.
+    g: PidGraph instance
+    s: source node id
+    t: sink node id
+    """
+    # Convert PidGraph edges into residual capacity dict
+    res: Dict[str, Dict[str, float]] = {}
+    for e in g.edges.values():
+        res.setdefault(e.src, {})[e.dst] = float(e.capacity)
+        res.setdefault(e.dst, {})  # ensure reverse exists
+        res[e.dst].setdefault(e.src, 0.0)
+
+    def bfs_level() -> Dict[str, int]:
+        """Build level graph (distance from source)."""
+        level = {s: 0}
+        q = deque([s])
+        while q:
+            u = q.popleft()
+            for v, cap in res.get(u, {}).items():
+                if cap > 1e-12 and v not in level:
+                    level[v] = level[u] + 1
+                    q.append(v)
+        return level
+
+    def dfs_flow(u: str, pushed: float, level: Dict[str, int], next_iter: Dict[str, int]) -> float:
+        """DFS blocking flow with edge iterator."""
+        if u == t or pushed == 0:
+            return pushed
+        neighbors = list(res[u].items())
+        while next_iter[u] < len(neighbors):
+            v, cap = neighbors[next_iter[u]]
+            next_iter[u] += 1
+            if cap > 1e-12 and level.get(v, -1) == level[u] + 1:
+                tr = dfs_flow(v, min(pushed, cap), level, next_iter)
+                if tr > 0:
+                    res[u][v] -= tr
+                    res[v][u] = res.get(v, {}).get(u, 0.0) + tr
+                    return tr
+        return 0.0
+
+    flow = 0.0
+    while True:
+        level = bfs_level()
+        if t not in level:  # no augmenting path
+            break
+        next_iter = {u: 0 for u in res}
+        while True:
+            pushed = dfs_flow(s, float("inf"), level, next_iter)
+            if pushed == 0:
+                break
+            flow += pushed
+
     return flow
 
 # Get source/sink roles from graph
@@ -244,25 +330,27 @@ def maxflow_throughput(g: PidGraph) -> Optional[float]:
     for s in sources:
         for t in sinks:
             if s in cap:
-                total += edmonds_karp(cap, s, t)
+                total += dinic_maxflow(cap, s, t)
     return total
 
 def reachability_score(g: PidGraph) -> float:
     nodes = list(g.nodes.keys())
     adj = {u: set() for u in nodes}
     for e in g.edges.values():
-        adj[e.src].add(e.dst)
+        if e.src in adj and e.dst in adj:   # safer if data might be inconsistent
+            adj[e.src].add(e.dst)
+
     reach = 0
     for u in nodes:
-        seen = set([u])
-        q = [u]
+        seen = {u}
+        q = deque([u])
         while q:
-            x = q.pop(0)
-            for v in adj.get(x, set()):
+            x = q.popleft()
+            for v in adj[x]:
                 if v not in seen:
-                    seen.add(v)
-                    q.append(v)
+                    seen.add(v); q.append(v)
         reach += len(seen) - 1
+
     denom = max(1, len(nodes) * (len(nodes) - 1))
     return reach / denom
 
@@ -305,4 +393,40 @@ def scf_scores(g: PidGraph, J: Optional[str] = "maxflow"):
         results.append((f"edge:{eid}", float(drop)))
 
     results.sort(key=lambda x: x[1], reverse=True)
+    return results
+
+
+def resilience_analysis(g: PidGraph, source: str, sink: str) -> Dict[str, Tuple[float, float, float]]:
+    """
+    Compute resilience metrics for a P&ID system by simulating
+    the failure of each edge one at a time.
+
+    Returns a dictionary:
+      edge_id -> (baseline_flow, flow_after_failure, resilience_ratio)
+
+    resilience_ratio = flow_after_failure / baseline_flow
+    """
+    results = {}
+
+    # Compute baseline max flow
+    baseline_flow = dinic_maxflow_pid(g, source, sink)
+
+    for edge_id in list(g.edges.keys()):
+        # Copy graph
+        g_copy = PidGraph(
+            nodes=g.nodes.copy(),
+            edges=g.edges.copy()
+        )
+
+        # Simulate failure: remove edge
+        g_copy.edges.pop(edge_id, None)
+
+        # Compute new max flow
+        flow_after = dinic_maxflow_pid(g_copy, source, sink)
+
+        # Avoid division by zero
+        resilience_ratio = flow_after / baseline_flow if baseline_flow > 1e-12 else 0.0
+
+        results[edge_id] = (baseline_flow, flow_after, resilience_ratio)
+
     return results
