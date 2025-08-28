@@ -1,0 +1,75 @@
+{
+  "nodes": [
+    {
+      "id": "T1",
+      "type": "tank",
+      "attrs": {
+        "A": 12.0
+      }
+    },
+    {
+      "id": "P1",
+      "type": "pump",
+      "attrs": {
+        "rated_head": 35
+      }
+    },
+    {
+      "id": "V1",
+      "type": "valve",
+      "attrs": {
+        "Cv": 42,
+        "fail_position": "fail-closed"
+      }
+    },
+    {
+      "id": "LIT1",
+      "type": "level_tx",
+      "attrs": {
+        "range": [
+          0,
+          5
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "type": "pipe",
+      "src": "T1",
+      "dst": "P1",
+      "attrs": {
+        "D": 0.15,
+        "L": 20
+      }
+    },
+    {
+      "id": "e2",
+      "type": "pipe",
+      "src": "P1",
+      "dst": "V1",
+      "attrs": {
+        "D": 0.1,
+        "L": 12
+      }
+    },
+    {
+      "id": "e3",
+      "type": "pipe",
+      "src": "V1",
+      "dst": "T1",
+      "attrs": {
+        "D": 0.1,
+        "L": 10
+      }
+    },
+    {
+      "id": "e4",
+      "type": "meas",
+      "src": "T1",
+      "dst": "LIT1",
+      "attrs": {}
+    }
+  ]
+}
