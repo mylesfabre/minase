@@ -19,14 +19,14 @@ INFO:
 	•	This makes the system computable — you can run graph algorithms (flow, reliability, controllability) directly instead of manually inspecting schematics.
 
 
-🔧  MaxFlow + Dinic’s Algorithm enables Capacity Analysis
+MaxFlow & Dinic’s Algorithm enables Capacity Analysis
 	•	The max flow represents the theoretical throughput of a process unit or network (e.g., how much material can reach a reactor).
 	•	Using Dinic’s (or Edmonds–Karp earlier) means the computation scales better for large P&ID systems with hundreds of components.
 	•	This provides a quantitative benchmark: the maximum safe operating rate before bottlenecks appear.
 
 ⸻
 
-⚠️ 3. Resilience Analysis → Single Component Failure
+3. Resilience Analysis to Single Component Failure
 	•	By systematically removing each edge and recomputing flow, the resilience function reveals:
 	•	Which component failures degrade performance the most.
 	•	Redundancy in parallel paths (robust design).
@@ -35,7 +35,7 @@ INFO:
 
 ⸻
 
-📊 4. Link to PCA (Principal Component Analysis)
+4. Link to PCA (Principal Component Analysis)
 
 Here’s where it gets interesting: PCA in industrial engineering is often used for multivariate process monitoring (many correlated sensor signals).
 	•	The graph embedding of the P&ID can be treated as a structural prior for PCA:
@@ -47,7 +47,7 @@ Here’s where it gets interesting: PCA in industrial engineering is often used 
 
 ⸻
 
-🚀 5. Holistic Value to Industrial Engineering
+5. Value to Industrial Engineering
 	1.	Model-based monitoring: Algorithms grounded in the P&ID itself, not just black-box data.
 	2.	Predictive reliability: Quantify how process flow degrades under failures.
 	3.	Safer operations: Identify single points of failure before commissioning or during revamp.
