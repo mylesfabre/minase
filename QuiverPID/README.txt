@@ -24,36 +24,28 @@ MaxFlow & Dinic’s Algorithm enables Capacity Analysis
 	•	Using Dinic’s (or Edmonds–Karp earlier) means the computation scales better for large P&ID systems with hundreds of components.
 	•	This provides a quantitative benchmark: the maximum safe operating rate before bottlenecks appear.
 
-⸻
 
-3. Resilience Analysis to Single Component Failure
+Resilience Analysis to Single Component Failure
 	•	By systematically removing each edge and recomputing flow, the resilience function reveals:
 	•	Which component failures degrade performance the most.
 	•	Redundancy in parallel paths (robust design).
 	•	Vulnerable bottlenecks (single points of failure).
 	•	This directly supports HAZOP (Hazard and Operability) studies and FMEA (Failure Mode and Effects Analysis) in industrial engineering.
 
-⸻
-
-4. Link to PCA (Principal Component Analysis)
-
-Here’s where it gets interesting: PCA in industrial engineering is often used for multivariate process monitoring (many correlated sensor signals).
+Link to Principal Component Analysis (PCA)
+PCA in industrial engineering is often used for multivariate process monitoring (many correlated sensor signals).
 	•	The graph embedding of the P&ID can be treated as a structural prior for PCA:
 	•	Instead of treating every sensor independently, you know which nodes interact via pipes/flows.
 	•	You can cluster correlated signals by graph connectivity, improving interpretability of PCA loadings.
 	•	Resilience scores can serve as features in PCA space:
-	•	e.g., include resilience ratio under edge failures as meta-features when analyzing system stability.
-	•	End result: PCA shifts from “just statistical dimensionality reduction” → “process-aware anomaly detection” guided by physical connectivity.
+			e.g., include resilience ratio under edge failures as meta-features when analyzing system stability.
+	•	PCA shifts from just statistical dimensionality reduction to process-aware anomaly detection guided by physical connectivity.
 
-⸻
-
-5. Value to Industrial Engineering
+Value to Industrial Engineering
 	1.	Model-based monitoring: Algorithms grounded in the P&ID itself, not just black-box data.
 	2.	Predictive reliability: Quantify how process flow degrades under failures.
 	3.	Safer operations: Identify single points of failure before commissioning or during revamp.
-	4.	Enhanced PCA: Integrate structure + data, making fault detection more explainable.
+	4.	Enhanced PCA: Integrate structure & data, making fault detection more explainable.
 	5.	Digital twin: You’re basically building a graph-based digital twin that can connect to real-time plant data.
-
-⸻
 
 👉🏾 So, holistically, this code improves industrial engineering PCA by embedding physical plant topology into data analysis, turning PCA into a process-aware diagnostic tool instead of a purely statistical one.
