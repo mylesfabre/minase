@@ -258,7 +258,7 @@ from typing import Dict
 from pid_quiver import PidGraph  # assuming your class is in pid_quiver.py
 
 # Use PID Objects Directly
-# Don't be mad about code duplication... let it slide..
+# Don't be mad about code duplication... let it flow..
 def dinic_maxflow_pid(g: PidGraph, s: str, t: str) -> float:
     """
     Run Dinic's MaxFlow algorithm on a PidGraph.
